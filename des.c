@@ -155,6 +155,7 @@ static void test_en_de(void)
     uint8_t *encypted = (uint8_t *)malloc(des_ctx.ceil_size);
     if (!encypted)
         pr_err("malloc failed (encypted)");
+    memset(encypted, 0, des_ctx.ceil_size);
 
     do_des_encrypt();
     

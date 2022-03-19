@@ -13,6 +13,12 @@
         exit(1);                               \
     } while (0)
 
+#define pr_text(output)                        \
+    do {                                       \
+        printf("[TEXT]\n");                    \
+        printf("\"%s\"\n", output);            \
+    } while (0)
+
 #define get_uint32(p)                      \
     ({                                     \
         struct {                           \
@@ -45,9 +51,9 @@ static struct des_struct des_ctx = {
 static inline void print_int(uint8_t *p, size_t size)
 {
     uint64_t *__p = (uint64_t *)p;
-    printf("hex: \"");
+    printf("[HEX]\n\"");
     do {
-        printf("%lx ", *__p);
+        printf("%016lx ", *__p);
     } while (__p += 1, size -= 8, size > 0);
     printf("\"\n");
 }
@@ -175,9 +181,9 @@ static inline void do_des_encrypt(void)
     do {
         des_encrypt((uint32_t *)des_ctx.key, (uint8_t *)dst_p, (uint8_t *)src_p);
     } while (dst_p += 8, src_p += 8, size -= 8, size > 0);
-    printf("Encrypt text:\n");
+    printf("Encrypt text:\n\n");
     print_int(des_ctx.output, des_ctx.ceil_size);
-    printf("text: \"%s\"\n", des_ctx.output);
+    pr_text(des_ctx.output);
 }
 
 static inline void do_des_decrypt(void)
@@ -188,9 +194,9 @@ static inline void do_des_decrypt(void)
     do {
         des_decrypt((uint32_t *)des_ctx.key, (uint8_t *)dst_p, (uint8_t *)src_p);
     } while (dst_p += 8, src_p += 8, size -= 8, size > 0);
-    printf("Decrypt text:\n");
+    printf("Decrypt text:\n\n");
     print_int(des_ctx.output, des_ctx.ceil_size);
-    printf("text: \"%s\"\n", des_ctx.output);
+    pr_text(des_ctx.output);
 }
 
 static inline void des_setkey(void)
@@ -203,7 +209,7 @@ static inline void __encrypt_get_text(void)
    memcpy(des_ctx.input, optarg, des_ctx.size);
 }
 
-static void __dencrypt_get_text(void)
+static inline void __dencrypt_get_text(void)
 {
     char *next_p, *src_p = optarg;
     uint64_t src, *dst_p = (uint64_t *)des_ctx.input;
@@ -231,6 +237,10 @@ static void get_text(int opt)
      */
     des_ctx.ceil_size = des_ctx.size = strlen(optarg);
     if (opt == 'd') {
+        if (des_ctx.ceil_size % 17)
+            pr_err("decrytion input error (%zu bytes)\n"
+                    "Decrytion format: \"[16 charater of hex][one space] ...\""
+                    "\n Your input is:\n%s\n", des_ctx.ceil_size, optarg);
         des_ctx.ceil_size /= 17;
         des_ctx.ceil_size *= 8;
     }
@@ -244,10 +254,11 @@ static void get_text(int opt)
         pr_err("malloc failed (input)\n");
     memset(des_ctx.input, 0, des_ctx.ceil_size);
     
-    des_ctx.output = (uint8_t *)malloc(des_ctx.ceil_size);
+    // for the end print need one btye more space to store '\0'
+    des_ctx.output = (uint8_t *)malloc(des_ctx.ceil_size + 1);
     if (!des_ctx.output)
         pr_err("malloc failed (output)\n");
-    memset(des_ctx.output, 0, des_ctx.ceil_size);
+    memset(des_ctx.output, 0, des_ctx.ceil_size + 1);
 
     if (opt == 'd')
         __dencrypt_get_text();
@@ -288,6 +299,7 @@ int main(int argc, char *argv[])
 {
     int opt;
 
+    printf("---\n");
     des_setkey();
     while ((opt = getopt(argc, argv, "e:d:a:"))) {
         get_text(opt);
@@ -302,8 +314,8 @@ int main(int argc, char *argv[])
             test_en_de();
             goto done; 
         default:
-            printf("Usage: %s [-e encrypt] [-d decrypt] [-a test encrypt decrypt] text\n",
-                   argv[0]);
+            printf("Usage: %s [-e encrypt] [-d decrypt]"
+                   " [-a test encrypt decrypt] text\n", argv[0]);
             pr_err("Unkown option\n");
         }
     }
@@ -311,5 +323,7 @@ int main(int argc, char *argv[])
 done:
     free(des_ctx.input);
     free(des_ctx.output);
+
+    printf("---\n");
     return 0;
 }

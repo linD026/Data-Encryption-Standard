@@ -540,24 +540,17 @@ static const uint32_t S8[64] = {
     L ^= T;          \
     ROR(R, 4);
 
-#define ROUND(L, R, A, B, K, d) \
-    B = K[0];                   \
-    A = K[1];                   \
-    K += d;                     \
-    B ^= R;                     \
-    A ^= R;                     \
-    B &= 0x3f3f3f3f;            \
-    ROR(A, 4);                  \
-    L ^= S8[0xff & B];          \
-    A &= 0x3f3f3f3f;            \
-    L ^= S6[0xff & (B >> 8)];   \
-    B >>= 16;                   \
-    L ^= S7[0xff & A];          \
-    L ^= S5[0xff & (A >> 8)];   \
-    A >>= 16;                   \
-    L ^= S4[0xff & B];          \
-    L ^= S2[0xff & (B >> 8)];   \
-    L ^= S3[0xff & A];          \
+#define ROUND(L, R, A, B, K, d)                          \
+    B = K[0];                   A = K[1];    K += d;     \
+    B ^= R;                     A ^= R;                  \
+    B &= 0x3f3f3f3f;            ROR(A, 4);               \
+    L ^= S8[0xff & B];          A &= 0x3f3f3f3f;         \
+    L ^= S6[0xff & (B >> 8)];   B >>= 16;                \
+    L ^= S7[0xff & A];                                   \
+    L ^= S5[0xff & (A >> 8)];   A >>= 16;                \
+    L ^= S4[0xff & B];                                   \
+    L ^= S2[0xff & (B >> 8)];                            \
+    L ^= S3[0xff & A];                                   \
     L ^= S1[0xff & (A >> 8)];
 
 #define T1(x) pt[2 * (x) + 0]

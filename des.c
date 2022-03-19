@@ -45,9 +45,9 @@ static struct des_struct des_ctx = {
 static inline void print_int(uint8_t *p, size_t size)
 {
     uint64_t *__p = (uint64_t *)p;
-    printf("digit: \"");
+    printf("hex: \"");
     do {
-        printf("%llu ", *__p);
+        printf("%lx ", *__p);
     } while (__p += 1, size -= 8, size > 0);
     printf("\"\n");
 }
@@ -198,16 +198,45 @@ static inline void des_setkey(void)
 	des_ekey((uint32_t *)des_ctx.expkey, (uint8_t *)des_ctx.key);
 }
 
-static inline void get_text(int opt)
+static inline void __encrypt_get_text(void)
+{
+   memcpy(des_ctx.input, optarg, des_ctx.size);
+}
+
+static void __dencrypt_get_text(void)
+{
+    char *next_p, *src_p = optarg;
+    uint64_t src, *dst_p = (uint64_t *)des_ctx.input;
+    size_t i = des_ctx.ceil_size;
+
+    for (;i > 0; i -= 8, src_p = next_p) {
+        src = strtoull(src_p, &next_p, 16);
+        *dst_p = src;
+        dst_p += 1;
+        next_p += 1;
+    }
+}
+
+static void get_text(int opt)
 {
     if (!optarg)
         pr_err("Doesn't have an input text\n");
 
-    /* 64 bits is 0100 0000 in binary */
+    /* one charater is 1 byte (8 bits), one block is 64 bits (8 bytes)
+     * so if the size is not n*8 bytes, add it to be n*8 size.
+     *
+     * if the opt is d, which mean decryption, the input will be:
+     * "ffffffffffffffff " in a block (the number is hex format)
+     * so at this we must deal with 17 bytes as a unit (8 bytes).
+     */
     des_ctx.ceil_size = des_ctx.size = strlen(optarg);
-    if (des_ctx.ceil_size & 63) {
-        des_ctx.ceil_size &= ~63;
-        des_ctx.ceil_size += 64;
+    if (opt == 'd') {
+        des_ctx.ceil_size /= 17;
+        des_ctx.ceil_size *= 8;
+    }
+    else if (des_ctx.ceil_size & 7) {
+        des_ctx.ceil_size &= ~7;
+        des_ctx.ceil_size += 8;
     }
 
     des_ctx.input = (uint8_t *)malloc(des_ctx.ceil_size);
@@ -215,15 +244,18 @@ static inline void get_text(int opt)
         pr_err("malloc failed (input)\n");
     memset(des_ctx.input, 0, des_ctx.ceil_size);
     
-    memcpy(des_ctx.input, optarg, des_ctx.size);
-
     des_ctx.output = (uint8_t *)malloc(des_ctx.ceil_size);
     if (!des_ctx.output)
         pr_err("malloc failed (output)\n");
     memset(des_ctx.output, 0, des_ctx.ceil_size);
 
-    printf("original text (ceil size %zu, size %zu):\n\n", des_ctx.ceil_size,
-           des_ctx.size);
+    if (opt == 'd')
+        __dencrypt_get_text();
+    else
+        __encrypt_get_text();
+
+    printf("original text (ceil size %zu bytes, size %zu bytes):\n\n",
+            des_ctx.ceil_size, des_ctx.size);
     print_int(des_ctx.input, des_ctx.ceil_size);
     printf("\n");
 }
@@ -258,17 +290,15 @@ int main(int argc, char *argv[])
 
     des_setkey();
     while ((opt = getopt(argc, argv, "e:d:a:"))) {
+        get_text(opt);
         switch (opt) {
         case 'e':
-            get_text(opt);
             do_des_encrypt();
             goto done;
         case 'd':
-            get_text(opt);
             do_des_decrypt();
             goto done;
         case 'a':
-            get_text(opt);
             test_en_de();
             goto done; 
         default:

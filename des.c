@@ -45,7 +45,7 @@ struct des_struct {
 };
 
 static struct des_struct des_ctx = {
-    .key = {0}
+    .key = { 145345234, 345345357, 6975670340, 90256753452}
 };
 
 static inline void print_int(uint8_t *p, size_t size)
@@ -238,7 +238,9 @@ static void get_text(int opt)
      * so at this we must deal with 17 bytes as a unit (8 bytes).
      */
     des_ctx.ceil_size = des_ctx.size = strlen(optarg);
-    if (opt == 'd') {
+    if (des_ctx.ceil_size == 0)
+            pr_err("NON INPUT\n");
+    else if (opt == 'd') {
         if (des_ctx.ceil_size % 17)
             pr_err("decrytion input error (%zu bytes)\n"
                     "Decrytion format: \"[16 charater of hex][one space] ...\""

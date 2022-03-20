@@ -41,7 +41,7 @@ struct des_struct {
     size_t size;
     size_t ceil_size;
     uint32_t expkey[DES_EXPKEY_WORDS];
-    uint64_t key[64];
+    uint64_t key[8];
 };
 
 static struct des_struct des_ctx = {
@@ -179,7 +179,8 @@ static inline void do_des_encrypt(void)
     size_t size = des_ctx.ceil_size;
 
     do {
-        des_encrypt((uint32_t *)des_ctx.key, (uint8_t *)dst_p, (uint8_t *)src_p);
+        des_encrypt((uint32_t *)des_ctx.expkey,
+                (uint8_t *)dst_p, (uint8_t *)src_p);
     } while (dst_p += 8, src_p += 8, size -= 8, size > 0);
     printf("Encrypt text:\n\n");
     print_int(des_ctx.output, des_ctx.ceil_size);
@@ -192,7 +193,8 @@ static inline void do_des_decrypt(void)
     size_t size = des_ctx.ceil_size;
 
     do {
-        des_decrypt((uint32_t *)des_ctx.key, (uint8_t *)dst_p, (uint8_t *)src_p);
+        des_decrypt((uint32_t *)des_ctx.expkey,
+                (uint8_t *)dst_p, (uint8_t *)src_p);
     } while (dst_p += 8, src_p += 8, size -= 8, size > 0);
     printf("Decrypt text:\n\n");
     print_int(des_ctx.output, des_ctx.ceil_size);

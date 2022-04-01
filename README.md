@@ -11,54 +11,61 @@ cc -o test des.c -g  -Wall -O2
 
 * encrypt:
     ```
-    $ ./test -e "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-    original text (ceil size 48 bytes, size 46 bytes):
-    
-    hex: "6161616161616161 6161616161616161 6161616161616161 6161616161616161 6161616161616161 616161616161 "
-    
+    $ ./test -e "test one \ two , three "
+    ---
+    original text (ceil size 24 bytes, size 23 bytes):
+
+    [HEX]
+    "656e6f2074736574 2c206f7774205c20 0020656572687420 "
+
     Encrypt text:
-    hex: "10af0c6997ba0af9 10af0c6997ba0af9 10af0c6997ba0af9 10af0c6997ba0af9 10af0c6997ba0af9 c5a4eb5557b78264 "
-    text: "�
-    ��i
-       ��
-    ��i
-       ��
-    ��i
-       ��
-    ��i
-       ��
-    ��i
-       �d��WU��"
+
+    [HEX]
+    "5d44496ed7671f38 63cae82907dc1395 f83932ad6f8edb47 "
+    [TEXT]
+    "8g�nID]��)��cGێo�29�"
+    ---
     ```
 * decrypt:
     ```
-    $ ./test -d "10af0c6997ba0af9 10af0c6997ba0af9 10af0c6997ba0af9 10af0c6997ba0af9 10af0c6997ba0af9 c5a4eb5557b78264 "
-    original text (ceil size 48 bytes, size 102 bytes):
-    
-    hex: "10af0c6997ba0af9 10af0c6997ba0af9 10af0c6997ba0af9 10af0c6997ba0af9 10af0c6997ba0af9 c5a4eb5557b78264 "
-    
+    $ ./test -d "5d44496ed7671f38 63cae82907dc1395 f83932ad6f8edb47 "
+    ---
+    original text (ceil size 24 bytes, size 51 bytes):
+
+    [HEX]
+    "5d44496ed7671f38 63cae82907dc1395 f83932ad6f8edb47 "
+
     Decrypt text:
-    hex: "6161616161616161 6161616161616161 6161616161616161 6161616161616161 6161616161616161 616161616161 "
-    text: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+
+    [HEX]
+    "656e6f2074736574 2c206f7774205c20 0020656572687420 "
+    [TEXT]
+    "test one \ two , three "
+    ---
     ```
 * encrypt then immediately decrypt (test):
     ```
-    $ ./test -a "aaaaaaaaaaasasaaaaaaaaaaaasasasasasdadasdasdasd"
-    original text (ceil size 48 bytes, size 47 bytes):
-    
-    hex: "6161616161616161 6161736173616161 6161616161616161 6173617361736161 7361646164736173 64736164736164 "
-    
+    $ ./test -a "test one \ two , three "
+    ---
+    original text (ceil size 24 bytes, size 23 bytes):
+
+    [HEX]
+    "656e6f2074736574 2c206f7774205c20 0020656572687420 "
+
     Encrypt text:
-    hex: "10af0c6997ba0af9 d7d08ad9b759c188 10af0c6997ba0af9 1d7167c778886b2f 3a6d449fb881667c 10462f239cfe954c "
-    text: "�
-    ��i
-       ���Y�ي���
-    ��i
-       �/k�x�gq|f���Dm:L���#/F"
-    
+
+    [HEX]
+    "5d44496ed7671f38 63cae82907dc1395 f83932ad6f8edb47 "
+    [TEXT]
+    "8g�nID]��)��cGێo�29�"
+
     Decrypt text:
-    hex: "6161616161616161 6161736173616161 6161616161616161 6173617361736161 7361646164736173 64736164736164 "
-    text: "aaaaaaaaaaasasaaaaaaaaaaaasasasasasdadasdasdasd"
-    
+
+    [HEX]
+    "656e6f2074736574 2c206f7774205c20 0020656572687420 "
+    [TEXT]
+    "test one \ two , three "
+
     Passed
+    ---
     ```
